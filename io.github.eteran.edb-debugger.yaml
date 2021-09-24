@@ -11,6 +11,12 @@ finish-args:
   - --socket=fallback-x11
   - --filesystem=host
   - --device=dri
+cleanup:
+      - /include
+      - /lib/cmake
+      - /usr/include
+      - /usr/lib
+      - /share/man
 modules:
   - name: boost
     buildsystem: simple
@@ -27,9 +33,6 @@ modules:
             project-id: 6845
             stable-only: true
             url-template: https://boostorg.jfrog.io/artifactory/main/release/$version/source/boost_${version0}_${version1}_${version2}.tar.gz
-    cleanup:
-      - /include
-      - /lib/cmake
   - name: capstone
     buildsystem: simple
     build-commands:
@@ -46,9 +49,6 @@ modules:
         x-checker-data:
           type: git
           tag-pattern: (\d+\.\d+\.\d+)
-    cleanup:
-      - /usr/include
-      - /usr/lib
   - name: edb
     buildsystem: cmake
     config-opts:
@@ -62,8 +62,6 @@ modules:
             type: json
             url: https://api.github.com/repos/eteran/edb-debugger/releases/latest
             version-query: .tag_name
-            url-query: ".assets[] | .browser_download_url"
+            url-query: ".assets[].browser_download_url"
     post-install:
       - install -D edb.appdata.xml -t /app/share/metainfo/
-    cleanup:
-      - /share/man
