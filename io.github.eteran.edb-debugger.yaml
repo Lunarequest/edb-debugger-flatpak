@@ -1,0 +1,69 @@
+app-id: io.github.eteran.edb-debugger
+runtime: org.kde.Platform
+runtime-version: '5.15'
+sdk: org.kde.Sdk
+command: edb
+rename-desktop-file: edb.desktop
+rename-appdata-file: edb.appdata.xml
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --filesystem=host
+  - --device=dri
+modules:
+  - name: boost
+    buildsystem: simple
+    build-commands:
+      - ./bootstrap.sh PREFIX=/app
+      - ./b2 headers
+      - ./b2 install --prefix=/app
+    sources:
+      - type: archive
+        url: https://boostorg.jfrog.io/artifactory/main/release/1.77.0/source/boost_1_77_0.tar.gz
+        sha256: 5347464af5b14ac54bb945dc68f1dd7c56f0dad7262816b956138fc53bcc0131
+        x-checker-data:
+            type: anitya
+            project-id: 6845
+            stable-only: true
+            url-template: https://boostorg.jfrog.io/artifactory/main/release/$version/source/boost_${version0}_${version1}_${version2}.tar.gz
+    cleanup:
+      - /include
+      - /lib/cmake
+  - name: capstone
+    buildsystem: simple
+    build-commands:
+        - make V=1 PREFIX=/app
+        - make DESTDIR=/app install
+        - mv /app/usr/lib/* /app/lib/
+        - mv /app/usr/include/* /app/include/
+        - mv /app/usr/bin /app/
+    sources:
+      - type: git
+        url: https://github.com/aquynh/capstone.git
+        tag: "4.0.2"
+        commit: 1d230532840a37ac032c6ab80128238fc930c6c1
+        x-checker-data:
+          type: git
+          tag-pattern: (\d+\.\d+\.\d+)
+    cleanup:
+      - /usr/include
+      - /usr/lib
+  - name: edb
+    buildsystem: cmake
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_INSTALL_PREFIX=/app
+    sources:
+      - type: archive
+        url: https://github.com/eteran/edb-debugger/releases/download/1.3.0/edb-debugger-1.3.0.tgz
+        sha256: 86df4a0940a39c1480a6fc789f167f94e87a7a330f2d8163fe871f42c754afe8
+        x-checker-data:
+            type: json
+            url: https://api.github.com/repos/eteran/edb-debugger/releases/latest
+            version-query: .tag_name
+            url-query: ".assets[] | .browser_download_url"
+    post-install:
+      - install -D edb.appdata.xml -t /app/share/metainfo/
+    cleanup:
+      - /share/man
